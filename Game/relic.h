@@ -6,8 +6,9 @@ class akabeko : public relic
 {
 private:
     int firstAttack{ 1 };
+    bool attStart{ false }; //CW added akabeko
 public:
-    akabeko(int fA = 1) :firstAttack(fA), relic(relicRarity::Common, "Akabeko", 90) {}
+    akabeko(int fA = 1) :firstAttack(fA), relic(relicRarity::Common, "Akabeko", 90) {}//;//CW added ';' akabeko
     void execute();
     void triggered();
     int getCounter() { return firstAttack; }

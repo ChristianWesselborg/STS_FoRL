@@ -86,7 +86,7 @@ public:
             this->holdsObs_->safeRemoveObserver(static_cast<observer*>(this));
             delete this;
         }
-        else { throw runtime_error("halt obs ch"); }
+        else { throw std::runtime_error("halt obs ch"); } // CW added 'std::'
     }
     observer* getObs() const { return obs_; }
     void setObs(observer* o) { obs_ = o; }
@@ -225,7 +225,7 @@ public:
             this->holdsObs_->safeRemoveObserver(static_cast<observer*>(this));
             delete this;
         }
-        else { throw runtime_error("halt obs ca"); }
+        else { throw std::runtime_error("halt obs ca"); } // CW std::
     }
     haltObservingTriggerCA<D>* clone(card* hO) { auto temp = new haltObservingTriggerCA<card>(hO, this->obs_, this->triggerPrio);  this->observing_->addObserver(temp); return temp;}
 };
@@ -1003,7 +1003,8 @@ void awakenedDeathTrigger<D>::triggered(character& enemy)
 {
     if (enemy.getSCRNIndex() == this->holdsObs_->getSCRNIndex())
     {
-        setAOstored(clamp(this->holdsObs_->getTotalStrength(), 0, 99));
+        int clamped { std::clamp(this->holdsObs_->getTotalStrength(), 0, 99) }; //CW clamped
+        setAOstored(clamped);
     }
 }
 template<typename D>
@@ -1059,7 +1060,7 @@ template<typename D>
 void calipersTrigger<D>::triggered()
 {
     this->holdsObs_->getBlock() > 15 ?
-        this->holdsObs_->setBlock(clamp(this->holdsObs_->getBlock() - 15, 0, 15)) :
+        this->holdsObs_->setBlock(std::clamp(this->holdsObs_->getBlock() - 15, 0, 15)) : //CW added std::
         this->holdsObs_->setBlock(0);
 }
 //class dupDBLTEndTrigger;

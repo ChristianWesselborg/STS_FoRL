@@ -411,8 +411,8 @@ int main()
 {
     py::scoped_interpreter guard{};
     pythonFunctions pyFunc(py::module::import("scripts.DQN"));
-    pyFunc.addOther(py::module::import("scripts.NN"));
-    pyFunc.addPred(py::module::import("scripts.PRED"));
+    pyFunc.addOther(py::module::import("scripts.NN")); //CW comment
+    pyFunc.addPred(py::module::import("scripts.PRED")); //CW comment
     gm.makeDatabase();
     gm.makeEvents();
     gm.makeRelicStacks();
@@ -429,7 +429,7 @@ int main()
     }
     
     // model training from here
-    const int n_episodes{ 30003 };
+    const int n_episodes{ 30 }; //30003 CW changed
     bool predTraining{ false };
     if (fullRuns)
     {
@@ -485,8 +485,9 @@ int main()
                 gm.endFight();
                 std::cout << "You lose" << endl;
                 gm.prelude();
-                std::cout <<"Calls: "<< callCount << endl;
-                callCount = 0;
+                //CW comment
+                //std::cout <<"Calls: "<< callCount << endl;
+                //callCount = 0;
                 gm.setRandomMacroThisFloor(false);
                 gm.thinOutMSIs();
                 vector<vector<int>> MSIs;
