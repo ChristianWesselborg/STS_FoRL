@@ -105,4 +105,11 @@ def getBestExpectedValue(states,preds):
     
 
 def loadModel():
-    agent.load(".\model\stsMACRO.hdf5")
+        # CW; if there is already an model build load that one, otherwise build a new model
+    if(os.path.exists(".\model\stsMACRO.hdf5")):
+        print('Loading in previously used MACRO model...')
+        agent.load(".\model\stsMACRO.hdf5")
+    else:
+        print("No previous MACRO model, building new...")
+        agent.__init__(state_size, action_size)
+        agent._build_model()

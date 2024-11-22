@@ -300,7 +300,14 @@ def getBestQValIndex(states, masks):
     #return np.argmax(np.amax(res[i]) for i in range(len(states)))
 
 def loadModel():
-    agent.load(".\model\stsMICRO.hdf5")
+    # CW; if there is already an model build load that one, otherwise build a new model
+    if(os.path.exists(".\model\stsMICRO.hdf5")):
+        print('Loading in previously used MICRO model...')
+        agent.load(".\model\stsMICRO.hdf5")
+    else:
+        print("No previous MICRO model, building new...")
+        agent.__init__(state_size, action_size)
+        agent._build_model()
     
 
 def trainModel(e):

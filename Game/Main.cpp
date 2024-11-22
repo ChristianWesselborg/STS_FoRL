@@ -429,7 +429,7 @@ int main()
     }
     
     // model training from here
-    const int n_episodes{ 30 }; //30003 CW changed
+    const int n_episodes{ 300 }; //30003 CW changed
     bool predTraining{ false };
     if (fullRuns)
     {
