@@ -1,0 +1,3 @@
+/home/wessec/STS/build/CMakeFiles/rebuild_cache.dir
+/home/wessec/STS/build/CMakeFiles/edit_cache.dir
+/home/wessec/STS/build/CMakeFiles/sts_rl.dir

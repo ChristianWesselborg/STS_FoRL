@@ -88,6 +88,14 @@ def callAllPredB(current_state):
     return agent.model.__call__( current_state )
 
 def loadModel():
-    agent.load(".\model\stsPRED.hdf5")
+    #agent.load(".\model\stsPRED.hdf5")
     L=0
+    # CW; if there is already an model load that one, otherwise build a new model
+    if(os.path.exists(".\model\stsPRED.hdf5")):
+        print('Loading in previously used PRED model...')
+        agent.load(".\model\stsPRED.hdf5")
+    else:
+        print("No previous PRED model, building new...")
+        agent.__init__(state_size, action_size)
+        agent._build_model()
     

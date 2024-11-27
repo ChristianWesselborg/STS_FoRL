@@ -1,0 +1,82 @@
+[
+{
+  "directory": "/home/wessec/STS/build",
+  "command": "/usr/bin/g++   -isystem /usr/include/python3.8  -g   -std=gnu++2a -o CMakeFiles/sts_rl.dir/Main.cpp.o -c /home/wessec/STS/Game/Main.cpp",
+  "file": "/home/wessec/STS/Game/Main.cpp"
+},
+{
+  "directory": "/home/wessec/STS/build",
+  "command": "/usr/bin/g++   -isystem /usr/include/python3.8  -g   -std=gnu++2a -o CMakeFiles/sts_rl.dir/enemies.cpp.o -c /home/wessec/STS/Game/enemies.cpp",
+  "file": "/home/wessec/STS/Game/enemies.cpp"
+},
+{
+  "directory": "/home/wessec/STS/build",
+  "command": "/usr/bin/g++   -isystem /usr/include/python3.8  -g   -std=gnu++2a -o CMakeFiles/sts_rl.dir/events.cpp.o -c /home/wessec/STS/Game/events.cpp",
+  "file": "/home/wessec/STS/Game/events.cpp"
+},
+{
+  "directory": "/home/wessec/STS/build",
+  "command": "/usr/bin/g++   -isystem /usr/include/python3.8  -g   -std=gnu++2a -o CMakeFiles/sts_rl.dir/gamestate1.cpp.o -c /home/wessec/STS/Game/gamestate1.cpp",
+  "file": "/home/wessec/STS/Game/gamestate1.cpp"
+},
+{
+  "directory": "/home/wessec/STS/build",
+  "command": "/usr/bin/g++   -isystem /usr/include/python3.8  -g   -std=gnu++2a -o CMakeFiles/sts_rl.dir/gamestate2.cpp.o -c /home/wessec/STS/Game/gamestate2.cpp",
+  "file": "/home/wessec/STS/Game/gamestate2.cpp"
+},
+{
+  "directory": "/home/wessec/STS/build",
+  "command": "/usr/bin/g++   -isystem /usr/include/python3.8  -g   -std=gnu++2a -o CMakeFiles/sts_rl.dir/gamestate3.cpp.o -c /home/wessec/STS/Game/gamestate3.cpp",
+  "file": "/home/wessec/STS/Game/gamestate3.cpp"
+},
+{
+  "directory": "/home/wessec/STS/build",
+  "command": "/usr/bin/g++   -isystem /usr/include/python3.8  -g   -std=gnu++2a -o CMakeFiles/sts_rl.dir/ic_cards.cpp.o -c /home/wessec/STS/Game/ic_cards.cpp",
+  "file": "/home/wessec/STS/Game/ic_cards.cpp"
+},
+{
+  "directory": "/home/wessec/STS/build",
+  "command": "/usr/bin/g++   -isystem /usr/include/python3.8  -g   -std=gnu++2a -o CMakeFiles/sts_rl.dir/pc_info.cpp.o -c /home/wessec/STS/Game/pc_info.cpp",
+  "file": "/home/wessec/STS/Game/pc_info.cpp"
+},
+{
+  "directory": "/home/wessec/STS/build",
+  "command": "/usr/bin/g++   -isystem /usr/include/python3.8  -g   -std=gnu++2a -o CMakeFiles/sts_rl.dir/top.cpp.o -c /home/wessec/STS/Game/top.cpp",
+  "file": "/home/wessec/STS/Game/top.cpp"
+},
+{
+  "directory": "/home/wessec/STS/build",
+  "command": "/usr/bin/g++   -isystem /usr/include/python3.8  -g   -std=gnu++2a -o CMakeFiles/sts_rl.dir/card.cpp.o -c /home/wessec/STS/Game/card.cpp",
+  "file": "/home/wessec/STS/Game/card.cpp"
+},
+{
+  "directory": "/home/wessec/STS/build",
+  "command": "/usr/bin/g++   -isystem /usr/include/python3.8  -g   -std=gnu++2a -o CMakeFiles/sts_rl.dir/character.cpp.o -c /home/wessec/STS/Game/character.cpp",
+  "file": "/home/wessec/STS/Game/character.cpp"
+},
+{
+  "directory": "/home/wessec/STS/build",
+  "command": "/usr/bin/g++   -isystem /usr/include/python3.8  -g   -std=gnu++2a -o CMakeFiles/sts_rl.dir/effects_triggers.cpp.o -c /home/wessec/STS/Game/effects_triggers.cpp",
+  "file": "/home/wessec/STS/Game/effects_triggers.cpp"
+},
+{
+  "directory": "/home/wessec/STS/build",
+  "command": "/usr/bin/g++   -isystem /usr/include/python3.8  -g   -std=gnu++2a -o CMakeFiles/sts_rl.dir/potions.cpp.o -c /home/wessec/STS/Game/potions.cpp",
+  "file": "/home/wessec/STS/Game/potions.cpp"
+},
+{
+  "directory": "/home/wessec/STS/build",
+  "command": "/usr/bin/g++   -isystem /usr/include/python3.8  -g   -std=gnu++2a -o CMakeFiles/sts_rl.dir/relic.cpp.o -c /home/wessec/STS/Game/relic.cpp",
+  "file": "/home/wessec/STS/Game/relic.cpp"
+},
+{
+  "directory": "/home/wessec/STS/build",
+  "command": "/usr/bin/g++   -isystem /usr/include/python3.8  -g   -std=gnu++2a -o CMakeFiles/sts_rl.dir/visuals.cpp.o -c /home/wessec/STS/Game/visuals.cpp",
+  "file": "/home/wessec/STS/Game/visuals.cpp"
+},
+{
+  "directory": "/home/wessec/STS/build",
+  "command": "/usr/bin/g++   -isystem /usr/include/python3.8  -g   -std=gnu++2a -o CMakeFiles/sts_rl.dir/savestate.cpp.o -c /home/wessec/STS/Game/savestate.cpp",
+  "file": "/home/wessec/STS/Game/savestate.cpp"
+}
+]

@@ -301,11 +301,13 @@ def getBestQValIndex(states, masks):
 
 def loadModel():
     # CW; if there is already an model build load that one, otherwise build a new model
-    if(os.path.exists(".\model\stsMICRO.hdf5")):
+    if(os.path.isfile("./model/stsMICRO.hdf5")):
+        #print(os.path(".\\"))
         print('Loading in previously used MICRO model...')
-        agent.load(".\model\stsMICRO.hdf5")
+        agent.load("./model/stsMICRO.hdf5")
     else:
         print("No previous MICRO model, building new...")
+        ##print(os.path(".\\"))
         agent.__init__(state_size, action_size)
         agent._build_model()
     

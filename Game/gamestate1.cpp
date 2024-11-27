@@ -5116,7 +5116,7 @@ void gamestate::genRealMap()
 }
 void gamestate::advanceRealEvent()
 {
-    if (random_int(1, 30) == 31) randomMacroThisFloor = true;
+    if (random_int(1, 30) == 32) randomMacroThisFloor = true; //CW originally set to == 31
     else { randomMacroThisFloor = false; }
     if (firstMapItr)
     {

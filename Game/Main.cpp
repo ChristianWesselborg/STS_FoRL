@@ -111,6 +111,8 @@ public:
 // takes any number of micro states, returns the index of the state with the highest Q-Value
 int callMicroIndex(const std::vector<stateInfo>& vecSINFOS, pythonFunctions& pyFunc_)
 {
+    std::cout << "callMicroIndex";//CW printout test; doesn't seem to be called
+
     vector<vector<vector<int>>> allSimmedSINFO;
     vector<vector<bool>> allSimmedSINFOMasks;
     for (int i{ 0 }; i < vecSINFOS.size(); ++i)
@@ -222,7 +224,8 @@ float callMacroValueREROLLPRED(const vector<macroStateInfo>& MSIs, pythonFunctio
 }
 
 bool ai{ true }; // false for manual player control, true for full model piloting
-bool fullRuns{ false }; // false for micro training, true for macro training
+bool fullRuns{ true }; // false for micro training, true for macro training
+//CW seems like the above bool set to false makes random encounters to train the micro model.
 
 all_pc_info apci;
 gamestate gm;
@@ -429,8 +432,8 @@ int main()
     }
     
     // model training from here
-    const int n_episodes{ 300 }; //30003 CW changed
-    bool predTraining{ false };
+    const int n_episodes{ 10003 }; //30003 CW changed
+    bool predTraining{ true };
     if (fullRuns)
     {
         pyFunc.LOAD_MICRO()();
@@ -497,7 +500,7 @@ int main()
                     MSIs.push_back(gm.MSIsForUpdate()[i].getNormalInputs());
                 }
                 endFloors.push_back({ e, gm.getFloorIndex() });
-                if (e % 250 == 0)
+                if (e % 250 == 0) //only prints out summary every %n episodes -- 250 original 
                 {
                     ofstream file;
                     file.open("./model/RUN_PERFORMANCE.txt", ios::app);
