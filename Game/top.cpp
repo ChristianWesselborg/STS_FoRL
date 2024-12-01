@@ -589,7 +589,7 @@ void macroStateInfo::createPredVars()
         relicCounters[apci.getRelics()[i]->getRelicIDNum() - 1] = clamp(apci.getRelics()[i]->getCounter(), 0, 99);
     }
 }
-vector<int> macroStateInfo::getNormalInputs() const
+vector<int> macroStateInfo::getNormalInputs() const //CW macro state information
 {
     vector<int> stateSpace; // 11,11,262,262,262,70,147,147,140,10,3 = 1325 (1219 (857 (529))) -> 1309
     stateSpace.insert(stateSpace.end(), deckCountPerCard.begin(), deckCountPerCard.end());

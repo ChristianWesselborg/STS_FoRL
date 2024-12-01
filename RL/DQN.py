@@ -15,7 +15,7 @@ action_size = 296 # 263 + 33
 batch_size = 64 # 32/64/128/256
 output_dir = './model/sts'
 update_after_actions = 20 # 5/10/20/30  
-update_target_network = 1000 # 200/500
+update_target_network = 10 # 200/500
 
 cname = ["Strike","Bash","Defend","Armaments","Anger","Bodyslam","Clash","Clothesline","Flex","Havoc","Headbutt",
 "HeavyBlade","Ironwave","PerfectedStrike","PommelStrike","ShrugItOff","SwordBoomerang","Thunderclap","TrueGrit",
@@ -45,8 +45,9 @@ class DQNAgent:
         self.state_size = _state_size
         self.action_size = _action_size
         self.memory = []
+        self.combat_size = 0 # CW variable to track combat length
 
-        self.gamma = 0.985 # 0.98
+        self.gamma = 0.9 # 0.98, 0.985 originally
         self.epsilon = 0.7
         #self.epsilon = 0.0
         self.epsilon_decay = 0.9999 #  ---  0.9994 is goodfor 5000, 0.9992 for 3000
@@ -102,6 +103,8 @@ class DQNAgent:
         pot_state = np.reshape( pot_state, (1, len(pot_state)))
 
         current_state = np.reshape( current_state, (1, len(current_state)))
+
+        self.combat_size += 1
 
         act_values = self.target_model.__call__([card_state, enemy_state, pot_state, current_state])
         if e % 28 == 27:
@@ -176,7 +179,7 @@ class DQNAgent:
                 return np.argmax(temp)
 
     def replay(self, batch_size):
-        minibatch = random.sample(self.memory, batch_size)
+        minibatch = self.memory[-batch_size:]
 
         card_state_sample =   np.array([minibatch[i][0][0] for i in range(batch_size)])
         enemy_state_sample =  np.array([minibatch[i][0][1] for i in range(batch_size)])
@@ -189,27 +192,24 @@ class DQNAgent:
         main_state_next_sample =   np.array([minibatch[i][3][3] for i in range(batch_size)])
 
         rewards_sample =    [minibatch[i][2] for i in range(batch_size)]
+        print("rewards sample:", rewards_sample)
         action_sample =     [minibatch[i][1] for i in range(batch_size)]
         done_sample =       tf.convert_to_tensor([float(minibatch[i][4]) for i in range(batch_size)])
         masks_next_sample = [minibatch[i][5] for i in range(batch_size)]  
         
-        future_rewards = self.target_model.predict([card_state_next_sample,enemy_state_next_sample,pot_state_next_sample,main_state_next_sample])
-
-        for i in range(batch_size):
-            for j in range(len(future_rewards[0])):
-                if not masks_next_sample[i][j]:
-                    future_rewards[i][j] = 0
-        updated_q_values = [rewards_sample[i] + self.gamma * np.amax(future_rewards[i]) for i in range(batch_size)]
-        for n in range(batch_size):
-            if(done_sample[n]):
-                updated_q_values[n] = rewards_sample[n]
+        #future_rewards = self.target_model.predict([card_state_next_sample,enemy_state_next_sample,pot_state_next_sample,main_state_next_sample])
+        # CW adjusting loss calculation to only reflect expected lost health
+        updated_q_values = [rewards_sample[i] + (self.gamma)**(batch_size - i) * np.sum(rewards_sample[i+1:]) for i in range(batch_size-1)]
+        updated_q_values.append(rewards_sample[-1])
+        print("updated q values:", updated_q_values)
 
         masks = tf.one_hot(action_sample, action_size)
         with tf.GradientTape() as tape:
             q_values = self.model([card_state_sample,enemy_state_sample,pot_state_sample,main_state_sample])
             q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)
+            print("Q-action: ", q_action)
             loss = self.loss_function(updated_q_values, q_action)
-            print(loss)
+            print("Loss: ", loss)
 
         grads = tape.gradient(loss, self.model.trainable_variables)
         self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
@@ -224,6 +224,9 @@ class DQNAgent:
 
     def save(self, name):
         self.model.save_weights(name)
+    
+    def combat_size_reset(self): # CW combat size reset
+        self.combat_size = 0
 
 
 agent = DQNAgent(state_size, action_size)
@@ -233,24 +236,24 @@ def takeStateGiveAction(current_state, masks, card_state, enemy_state, pot_state
     #    agent.load(".\model\stsL.hdf5")
     return agent.act(card_state, enemy_state, pot_state, current_state,masks,e) 
 
+
 def takeNextStateUpdateNetwork(old_state,card_state, enemy_state, pot_state, action, reward, next_state, next_state_card, next_state_enemy, next_state_pot, done, masks_next, e):
     agent.remember([card_state, enemy_state, pot_state, old_state], action, reward, [next_state_card, next_state_enemy, next_state_pot, next_state], done, masks_next)
-
-    if len(agent.memory) > 1000 and e % update_after_actions == 0 and e != agent.last_e_trained:
-        print("e: {:.2}".format(agent.epsilon))
+    if(done == True):
+        print("update episode: {}, {}".format(e, agent.combat_size))
         agent.last_e_trained = e
-        for _ in range(10):
-            agent.replay(batch_size)
 
-    if e % update_target_network == 0:
-        agent.target_model.set_weights(agent.model.get_weights())
+        agent.replay(agent.combat_size)
+        agent.combat_size_reset() # CW reset combat length counter
+        agent.target_model.set_weights(agent.model.get_weights()) # CW update target network every time
 
-    if e % 2000 == 0:
+    if e % 100 == 0:
         agent.save(output_dir + "MICRO" + '{:04d}'.format(e) + ".hdf5")
+
 def getEpsilon():
     return round(agent.epsilon,4)
 
-def callQVALSforSim(card_state, enemy_state, pot_state, current_state, masks):
+def callQVALSforSim(card_state, enemy_state, pot_state, current_state, masks): # CW called once in potion check
     card_state = np.reshape( card_state, (1, len(card_state)))
     enemy_state = np.reshape( enemy_state, (1, len(enemy_state)))
     pot_state = np.reshape( pot_state, (1, len(pot_state)))
@@ -262,7 +265,7 @@ def callQVALSforSim(card_state, enemy_state, pot_state, current_state, masks):
         temp.append(-2000 if not masks[i] else act_values[0][i])
     return np.amax(temp)
 
-def callAllQVALS(states, masks):
+def callAllQVALS(states, masks): # CW Called once in pc_info potion check 
 
     card_state = np.array([states[i][0] for i in range(len(states))])
     enemy_state = np.array([states[i][1] for i in range(len(states))])
@@ -312,7 +315,7 @@ def loadModel():
         agent._build_model()
     
 
-def trainModel(e):
+def trainModel(e): # CW Doesn't get called
     if len(agent.memory) > 2000 and e % update_after_actions == 0:
         print("e: {:.2}".format(agent.epsilon))
         for _ in range(50):

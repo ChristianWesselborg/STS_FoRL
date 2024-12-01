@@ -2409,7 +2409,7 @@ void gamestate::startMushroomFight()
     addEnemiesByID("FungiBeast_ID",0,true);
     addEnemiesByID("FungiBeast_ID",1,true);
     addEnemiesByID("FungiBeast_ID",2,true);
-    try { if (ai) { apci.startTurn(); outerTurnLoopAI(getPyFunc()); } else { outerTurnLoop(); } }
+    try { if (ai) { apci.startTurn(); outerTurnLoopAI(getPyFunc(), -1); } else { outerTurnLoop(); } }
     catch (SmokeBombError) { apci.removeSmokeBomb(); mapPath[mapPathIndex] = '?'; throw SmokeBombError("escaped"); }
     if(apci.getPlayer().getHealth() != 0)
     {
@@ -2449,7 +2449,7 @@ void gamestate::startDeadAdventurerFight()
         enemies_[0]->addPastAttack("asleep");
         enemies_[0]->addPastAttack("asleep");
     }
-    try { if (ai) { apci.startTurn(); outerTurnLoopAI(getPyFunc()); } else { outerTurnLoop(); } }
+    try { if (ai) { apci.startTurn(); outerTurnLoopAI(getPyFunc(), -1); } else { outerTurnLoop(); } }
     catch (SmokeBombError) { apci.removeSmokeBomb(); mapPath[mapPathIndex] = '?'; throw SmokeBombError("escaped"); }
     if (apci.getPlayer().getHealth() != 0)
     {
@@ -2466,7 +2466,7 @@ void gamestate::startBanditFight()
     addEnemiesByID("Pointy_ID", 0, true);
     addEnemiesByID("Romeo_ID", 1, true);
     addEnemiesByID("Bear_ID", 2, true);
-    try { if (ai) { apci.startTurn(); outerTurnLoopAI(getPyFunc()); } else { outerTurnLoop(); } }
+    try { if (ai) { apci.startTurn(); outerTurnLoopAI(getPyFunc(), -1); } else { outerTurnLoop(); } }
     catch (SmokeBombError) { apci.removeSmokeBomb(); mapPath[mapPathIndex] = '?'; throw SmokeBombError("escaped"); }
     if (apci.getPlayer().getHealth() != 0)
     {
@@ -2484,7 +2484,7 @@ void gamestate::startOrbFight()
     mapPath[mapPathIndex] = 'e';
     addEnemiesByID("OrbWalker_ID", 0, true);
     addEnemiesByID("OrbWalker_ID", 1, true);
-    try { if (ai) { apci.startTurn(); outerTurnLoopAI(getPyFunc()); } else { outerTurnLoop(); } }
+    try { if (ai) { apci.startTurn(); outerTurnLoopAI(getPyFunc(), -1); } else { outerTurnLoop(); } }
     catch (SmokeBombError) { apci.removeSmokeBomb(); mapPath[mapPathIndex] = '?'; throw SmokeBombError("escaped"); }
     if (apci.getPlayer().getHealth() != 0)
     {
@@ -2515,7 +2515,7 @@ void gamestate::startAct1BossFight()
         break;
     }
     resetVisuals();
-    try { if (ai) { apci.startTurn(); outerTurnLoopAI(getPyFunc()); } else { outerTurnLoop(); } }
+    try { if (ai) { apci.startTurn(); outerTurnLoopAI(getPyFunc(), -1); } else { outerTurnLoop(); } }
     catch (SmokeBombError) { apci.removeSmokeBomb(); mapPath[mapPathIndex] = '?'; throw SmokeBombError("escaped"); }
     if (apci.getPlayer().getHealth() != 0)
     {
@@ -2538,7 +2538,7 @@ void gamestate::startColosseumFight()
     mapPath[mapPathIndex] = 'E';
     addEnemiesByID("BlueSlaver_ID", 0, true);
     addEnemiesByID("RedSlaver_ID", 1, true);
-    try { if (ai) { apci.startTurn(); outerTurnLoopAI(getPyFunc()); } else { outerTurnLoop(); } }
+    try { if (ai) { apci.startTurn(); outerTurnLoopAI(getPyFunc(), -1); } else { outerTurnLoop(); } }
     catch (SmokeBombError) { apci.removeSmokeBomb(); return; }
     if (apci.getPlayer().getHealth() != 0)
     {
@@ -2552,7 +2552,7 @@ void gamestate::startColosseumFight2()
     visuals::setvisInUse(aiu::two);
     addEnemiesByID("Taskmaster_ID", 0, true);
     addEnemiesByID("GremlinNob_ID", 1, true);
-    try { if (ai) { apci.startTurn(); outerTurnLoopAI(getPyFunc()); } else { outerTurnLoop(); } }
+    try { if (ai) { apci.startTurn(); outerTurnLoopAI(getPyFunc(), -1); } else { outerTurnLoop(); } }
     catch (SmokeBombError) { apci.removeSmokeBomb(); mapPath[mapPathIndex] = '?'; throw SmokeBombError("escaped"); }
     if (apci.getPlayer().getHealth() != 0)
     {
@@ -2989,7 +2989,7 @@ void gamestate::startAct4()
         if (ai) 
         { 
             apci.startTurn(); 
-            outerTurnLoopAI(getPyFunc()); 
+            outerTurnLoopAI(getPyFunc(), -1); 
         }
         else { outerTurnLoop(); } 
     }
@@ -3007,7 +3007,7 @@ void gamestate::startAct4()
     if (ai)
     {
         apci.startTurn();
-        outerTurnLoopAI(getPyFunc());
+        outerTurnLoopAI(getPyFunc(), -1);
     }
     else { outerTurnLoop(); }
 

@@ -209,7 +209,7 @@ std::vector<float> callPredSINGLE(const macroStateInfo&, pythonFunctions& pyFunc
 std::vector<std::vector<float>> callPredBATCH(const std::vector<macroStateInfo>&, pythonFunctions& pyFunc_);
 float callMacroValueCONSTPRED(const std::vector<macroStateInfo>&, pythonFunctions& pyFunc_);
 float callMacroValueREROLLPRED(const std::vector<macroStateInfo>&, pythonFunctions& pyFunc_);
-void outerTurnLoopAI(pythonFunctions& pyFunc);
+void outerTurnLoopAI(pythonFunctions& pyFunc, int e);
 int callMicroIndex(const std::vector<stateInfo>&, pythonFunctions& pyFunc_);
 std::vector<float> callMicroValues(const std::vector<stateInfo>&, pythonFunctions& pyFunc_);
 
@@ -427,7 +427,7 @@ struct macroStateInfo
     void copyNonMapRep(const macroStateInfo&);
     void mapRepZeroes();
 };
-struct stateInfo
+struct stateInfo //CW Structure of state information
 {
     std::vector<int> handCardIDs; // = 10*card IDs -> 10*embedding size input vars
     std::vector<int> handCardEnergy; // = 10*card IDs -> 10*embedding size input vars

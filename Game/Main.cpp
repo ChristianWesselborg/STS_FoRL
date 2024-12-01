@@ -234,7 +234,7 @@ float rewardMultiplier{ 0.04f }; // weighting of relic counters at fight end
 
 // similar to gamestate::outerTurnLoop, needed more flexibility for model integration
 // carries out the decision making and simulation in fights
-void outerTurnLoopAI(pythonFunctions& pyFunc)
+void outerTurnLoopAI(pythonFunctions& pyFunc, int e)
 {
     int startHP = apci.getPlayer().getHealth();
     vector<unique_ptr<potion>> holdPots;
@@ -257,7 +257,7 @@ void outerTurnLoopAI(pythonFunctions& pyFunc)
             }
         }
     }
-    bool showThisFight = random_int(1, 50) == 50;
+    bool showThisFight = random_int(1, 50) == 51; //CW don't show fight
     while (true)
     {
         if (gm.getMapPathEvent() == 'B' && gm.getActNumber()>1 || showThisFight)
@@ -352,7 +352,9 @@ void outerTurnLoopAI(pythonFunctions& pyFunc)
         forcedAIActions(action, reward);
 
         try { apci.turnLoop(action); }
-        catch (PlayerDiedError) {}
+        catch (PlayerDiedError) {
+            // CW todo Print statement here to see if this is the catch for player death
+        }
 
         gamestate::aiSimActionBuffer.clear();
         gamestate::aiCardBuffer.clear();
@@ -362,7 +364,15 @@ void outerTurnLoopAI(pythonFunctions& pyFunc)
 
         if (gm.turnCount > 100) apci.getPlayer().setHealth(0);
 
-        if (apci.getPlayer().getHealth() == 0) { throw PlayerDiedError("died"); }
+        if (apci.getPlayer().getHealth() == 0) { 
+            // CW put micro update here unsucesssful combat
+            std::cout << "outerTurnLoopAI: Player death" << endl; //CW outTurnLoopAI death catch
+            reward = -100;
+            done = true;
+            pyFunc.UPDATE_MICRO()(currentState, currentStateCA, currentStateEN, currentStatePO, action, reward, nextState, nextStateCA, nextStateEN, nextStatePO, done, nextMasks, e);
+
+            throw PlayerDiedError("died"); 
+        }
         else if (gm.checkAllEnemyDeath())
         {
             done = true;
@@ -375,6 +385,11 @@ void outerTurnLoopAI(pythonFunctions& pyFunc)
             }
             reward += static_cast<float>(apci.getGold() - oldGold) / 50;
             reward += static_cast<float>(apci.getPlayer().getMaxHealth() - oldMaxHP) / 6;
+            // CW put micro update here for successful combat
+            std::cout << "outerTurnLoopAI: end combat" << endl; //CW outTurnLoopAI death catch
+            reward = static_cast<float>(apci.getPlayer().getHealth() - oldMaxHP); //CW reward only lost health
+            pyFunc.UPDATE_MICRO()(currentState, currentStateCA, currentStateEN, currentStatePO, action, reward, nextState, nextStateCA, nextStateEN, nextStatePO, done, nextMasks, e);
+
         }
         else
         {
@@ -388,6 +403,12 @@ void outerTurnLoopAI(pythonFunctions& pyFunc)
             nextStateEN = SINFO.getEmbeddingInputsEN();
             nextStatePO = SINFO.getEmbeddingInputsPO();
             nextMasks = SINFO.getMasks();
+
+            // CW remember action regardless if combat is finished
+            reward = 0;
+            done = false;
+            pyFunc.UPDATE_MICRO()(currentState, currentStateCA, currentStateEN, currentStatePO, action, reward, nextState, nextStateCA, nextStateEN, nextStatePO, done, nextMasks, e);
+            
         }
         if (gm.getMapPathEvent() == 'E' || gm.getMapPathEvent() == 'B' || gm.getActNumber() > 1 || random_int(1,5)==5)
         {
@@ -432,7 +453,7 @@ int main()
     }
     
     // model training from here
-    const int n_episodes{ 10003 }; //30003 CW changed
+    const int n_episodes{ 1000 }; //30003 CW changed
     bool predTraining{ true };
     if (fullRuns)
     {
@@ -471,7 +492,7 @@ int main()
                         gm.playNextEvent();
                         if (gm.getMapPathEvent() == 'e' || gm.getMapPathEvent() == 'E' || gm.getMapPathEvent() == 'B')
                         {
-                            outerTurnLoopAI(pyFunc);
+                            outerTurnLoopAI(pyFunc, e); //CW adding passing e to function for training
                             gm.AIFightEnd();
                         }
                     }
@@ -500,7 +521,7 @@ int main()
                     MSIs.push_back(gm.MSIsForUpdate()[i].getNormalInputs());
                 }
                 endFloors.push_back({ e, gm.getFloorIndex() });
-                if (e % 250 == 0) //only prints out summary every %n episodes -- 250 original 
+                if (e % 100 == 0) //only prints out summary every %n episodes -- 250 original 
                 {
                     ofstream file;
                     file.open("./model/RUN_PERFORMANCE.txt", ios::app);
@@ -675,9 +696,9 @@ int main()
                     if (gm.checkEnemyDeath()) gm.handleEnemyDeath();
 
                     if (apci.getPlayer().getHealth() == 0) { done = true; }
-                    else if (gm.checkAllEnemyDeath())
+                    else if (gm.checkAllEnemyDeath()) //Check to see if combat is over
                     {
-                        done = true;
+                        done = true; //combat is over flag
                         reward = static_cast<float>(apci.getPlayer().getHealth() / 10);
                         if (gm.getMapPathEvent() == 'B') reward += 1;
                         SINFO.enemyVars[0] = 0;
@@ -727,7 +748,7 @@ int main()
                         int hprng = random_int(75, 85);
                         apci.getPlayer().setMaxHealth(hprng);
                         apci.getPlayer().setHealth(hprng - random_int(0,20));
-
+                        
                         
                         break;
                     }
