@@ -47,13 +47,13 @@ class DQNAgent:
         self.memory = []
         self.combat_size = 0 # CW variable to track combat length
 
-        self.gamma = 0.9 # 0.98, 0.985 originally
-        self.epsilon = 0.7
+        self.gamma = 0.95 # 0.98, 0.985 originally
+        self.epsilon = 0.2 #0.7 originally
         #self.epsilon = 0.0
-        self.epsilon_decay = 0.9999 #  ---  0.9994 is goodfor 5000, 0.9992 for 3000
-        self.epsilon_min = 0.2
+        self.epsilon_decay = 0.995 #  ---  0.9994 is goodfor 5000, 0.9992 for 3000, 0.9999 originally
+        self.epsilon_min = 0.05
         #self.epsilon_min = 0.0
-        self.learning_rate = 0.00005 
+        self.learning_rate = 0.0005 # 0.00005 originally
 
         self.model = self._build_model()
         self.target_model = self._build_model()
@@ -192,22 +192,21 @@ class DQNAgent:
         main_state_next_sample =   np.array([minibatch[i][3][3] for i in range(batch_size)])
 
         rewards_sample =    [minibatch[i][2] for i in range(batch_size)]
-        print("rewards sample:", rewards_sample)
         action_sample =     [minibatch[i][1] for i in range(batch_size)]
         done_sample =       tf.convert_to_tensor([float(minibatch[i][4]) for i in range(batch_size)])
         masks_next_sample = [minibatch[i][5] for i in range(batch_size)]  
         
         #future_rewards = self.target_model.predict([card_state_next_sample,enemy_state_next_sample,pot_state_next_sample,main_state_next_sample])
         # CW adjusting loss calculation to only reflect expected lost health
-        updated_q_values = [rewards_sample[i] + (self.gamma)**(batch_size - i) * np.sum(rewards_sample[i+1:]) for i in range(batch_size-1)]
+        updated_q_values = [rewards_sample[i] + (self.gamma)**(batch_size - 1 - i) * np.sum(rewards_sample[i+1:]) for i in range(batch_size-1)]
         updated_q_values.append(rewards_sample[-1])
-        print("updated q values:", updated_q_values)
+        print("updated q values:", updated_q_values[-1])
 
         masks = tf.one_hot(action_sample, action_size)
         with tf.GradientTape() as tape:
             q_values = self.model([card_state_sample,enemy_state_sample,pot_state_sample,main_state_sample])
             q_action = tf.reduce_sum(tf.multiply(q_values, masks), axis=1)
-            print("Q-action: ", q_action)
+            #print("Q-action: ", q_action)
             loss = self.loss_function(updated_q_values, q_action)
             print("Loss: ", loss)
 
@@ -304,10 +303,10 @@ def getBestQValIndex(states, masks):
 
 def loadModel():
     # CW; if there is already an model build load that one, otherwise build a new model
-    if(os.path.isfile("./model/stsMICRO.hdf5")):
+    if(os.path.isfile("./model/stsMICRO*.hdf5")):
         #print(os.path(".\\"))
         print('Loading in previously used MICRO model...')
-        agent.load("./model/stsMICRO.hdf5")
+        agent.load("./model/stsMICRO*.hdf5")
     else:
         print("No previous MICRO model, building new...")
         ##print(os.path(".\\"))

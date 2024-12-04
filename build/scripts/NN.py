@@ -12,7 +12,7 @@ action_size = 1
 batch_size = 64
 output_dir = './model/sts'
 update_after_actions = 20 
-update_target_network = 200
+update_target_network = 100 # 200 originally
 
 
 class DQNAgent:
@@ -21,10 +21,10 @@ class DQNAgent:
         self.action_size = _action_size
         self.memory = []
 
-        self.epsilon = 0.0
+        self.epsilon = 0.5 #0 originally
         self.epsilon_decay = 0.999
-        self.epsilon_min = 0.0
-        self.learning_rate = 0.0001
+        self.epsilon_min = 0.01 #0.0 originally
+        self.learning_rate = 0.0005 #0.0001 originally
 
         self.model = self._build_model()
         self.optimizer = optimizers.Adam(learning_rate=self.learning_rate)
@@ -72,7 +72,7 @@ def takeStatesUpdateNetwork(states, floor,preds):
     current_state = np.array([np.append(states[i],preds[i],axis=0) for i in range(len(preds))])
     agent.count+=1
     agent.remember( current_state, floor)
-    if len(agent.memory) > batch_size and len(agent.memory) > 5000 and agent.count % 4 == 0:
+    if len(agent.memory) > batch_size and len(agent.memory) > 200 and agent.count % 4 == 0: #update after 5000 orignally 
         print("e: {:.2}".format(agent.epsilon))
         print("Count: {}".format(agent.count))
         for _ in range(10):
@@ -106,9 +106,9 @@ def getBestExpectedValue(states,preds):
 
 def loadModel():
         # CW; if there is already an model build load that one, otherwise build a new model
-    if(os.path.exists(".\model\stsMACRO.hdf5")):
+    if(os.path.exists(".\model\stsMACRO*.hdf5")):
         print('Loading in previously used MACRO model...')
-        agent.load(".\model\stsMACRO.hdf5")
+        agent.load(".\model\stsMACRO*.hdf5")
     else:
         print("No previous MACRO model, building new...")
         agent.__init__(state_size, action_size)

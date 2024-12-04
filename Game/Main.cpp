@@ -367,7 +367,7 @@ void outerTurnLoopAI(pythonFunctions& pyFunc, int e)
         if (apci.getPlayer().getHealth() == 0) { 
             // CW put micro update here unsucesssful combat
             std::cout << "outerTurnLoopAI: Player death" << endl; //CW outTurnLoopAI death catch
-            reward = -100;
+            reward = -startHP;
             done = true;
             pyFunc.UPDATE_MICRO()(currentState, currentStateCA, currentStateEN, currentStatePO, action, reward, nextState, nextStateCA, nextStateEN, nextStatePO, done, nextMasks, e);
 
@@ -387,7 +387,7 @@ void outerTurnLoopAI(pythonFunctions& pyFunc, int e)
             reward += static_cast<float>(apci.getPlayer().getMaxHealth() - oldMaxHP) / 6;
             // CW put micro update here for successful combat
             std::cout << "outerTurnLoopAI: end combat" << endl; //CW outTurnLoopAI death catch
-            reward = static_cast<float>(apci.getPlayer().getHealth() - oldMaxHP); //CW reward only lost health
+            reward = static_cast<float>(apci.getPlayer().getHealth() - startHP); //CW reward only lost health
             pyFunc.UPDATE_MICRO()(currentState, currentStateCA, currentStateEN, currentStatePO, action, reward, nextState, nextStateCA, nextStateEN, nextStatePO, done, nextMasks, e);
 
         }
@@ -453,7 +453,7 @@ int main()
     }
     
     // model training from here
-    const int n_episodes{ 1000 }; //30003 CW changed
+    const int n_episodes{ 1500 }; //30003 CW changed
     bool predTraining{ true };
     if (fullRuns)
     {
