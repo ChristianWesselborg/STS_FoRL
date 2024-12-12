@@ -17,6 +17,8 @@ output_dir = './model/sts'
 update_after_actions = 20 # 5/10/20/30  
 update_target_network = 10 # 200/500
 
+LOSS_CLIPPING = 0.2
+
 cname = ["Strike","Bash","Defend","Armaments","Anger","Bodyslam","Clash","Clothesline","Flex","Havoc","Headbutt",
 "HeavyBlade","Ironwave","PerfectedStrike","PommelStrike","ShrugItOff","SwordBoomerang","Thunderclap","TrueGrit",
 "TwinStrike","WarCry","WildStrike","BattleTrance","BloodForBlood","Bloodletting","BurningPact","Carnage","Combust","DarkEmbrace",
@@ -45,15 +47,16 @@ class DQNAgent:
         self.state_size = _state_size
         self.action_size = _action_size
         self.memory = []
+        self.loss_memory = []
         self.combat_size = 0 # CW variable to track combat length
 
-        self.gamma = 0.95 # 0.98, 0.985 originally
+        self.gamma = .99 # 0.98, 0.985 originally
         self.epsilon = 0.2 #0.7 originally
         #self.epsilon = 0.0
         self.epsilon_decay = 0.995 #  ---  0.9994 is goodfor 5000, 0.9992 for 3000, 0.9999 originally
         self.epsilon_min = 0.05
         #self.epsilon_min = 0.0
-        self.learning_rate = 0.0005 # 0.00005 originally
+        self.learning_rate = 0.005 # 0.00005 originally
 
         self.model = self._build_model()
         self.target_model = self._build_model()
@@ -210,6 +213,7 @@ class DQNAgent:
             loss = self.loss_function(updated_q_values, q_action)
             print("Loss: ", loss)
 
+        self.loss_memory.append(loss)
         grads = tape.gradient(loss, self.model.trainable_variables)
         self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
 
@@ -226,28 +230,188 @@ class DQNAgent:
     
     def combat_size_reset(self): # CW combat size reset
         self.combat_size = 0
+    def lossWriter(self):
+        print("LossWriter")
+        with open("./model/lossMemory.txt", "w") as file:
+            # Iterate through the list and write each element to the file
+            i = 1
+            for item in self.loss_memory:
+                file.write(f"{i}    {item}\n")
+                i += 1
+
+class ActorAgent:
+    def __init__(self,_state_size,_action_size):
+        self.state_size = _state_size
+        self.action_size = _action_size
+        self.memory = []
+        self.loss_memory = []
+        self.combat_size = 0 # CW variable to track combat length
+
+        self.gamma = .99 # 0.98, 0.985 originally
+        self.epsilon = 0.2 #0.7 originally
+        #self.epsilon = 0.0
+        self.epsilon_decay = 0.995 #  ---  0.9994 is goodfor 5000, 0.9992 for 3000, 0.9999 originally
+        self.epsilon_min = 0.05
+        #self.epsilon_min = 0.0
+        self.learning_rate = 0.0005 # 0.00005 originally
+
+        self.model = self._build_model()
+        self.target_model = self._build_model()
+        self.initial_learning_rate = 0.003
+        self.lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+            self.initial_learning_rate,
+            decay_steps=150,
+            decay_rate=0.95,
+            staircase=True)
+        self.optimizer = optimizers.Adam(learning_rate=self.learning_rate)
+        self.loss_function = losses.MeanSquaredError()
+        self.last_e_trained = 0
+
+    def _build_model(self):
+        embed_size = 80 # 50/100
+        embed_size2 = 50 # 50/100 
+        card_input = layers.Input(shape=(11,))
+        card_embed = layers.Embedding(132, embed_size, input_length=11)(card_input)
+        card_embed = layers.Flatten()(card_embed)
+        enemy_input = layers.Input(shape=(15,))
+        enemy_embed = layers.Embedding(195, embed_size, input_length=15)(enemy_input)
+        enemy_embed = layers.Flatten()(enemy_embed)
+        pot_input = layers.Input(shape=(5,))
+        pot_embed = layers.Embedding(34, embed_size2, input_length=5)(pot_input)
+        pot_embed = layers.Flatten()(pot_embed)
+        main_input = layers.Input(shape=(self.state_size,))
+        
+        merged = layers.Concatenate(axis=-1)([card_embed, enemy_embed, pot_embed, main_input])
+        layer0 = layers.Dropout(0.003)(merged) # 0.2
+        dense1 = layers.Dense(3072, input_dim=(self.state_size+26*embed_size + embed_size2*5), activation='relu')(layer0) # 3072
+        dense2 = layers.Dense(2048, activation='relu')(dense1) # 2048
+        output = layers.Dense(self.action_size, activation='linear')(dense2)
+
+        model = models.Model(inputs=[card_input, enemy_input, pot_input, main_input], outputs=output)
+        model.summary()
+
+        return model
+
+    def remember(self, state, action, reward, next_state, done, masks_next):
+        if(len(self.memory)) > 30000: # 500/15000/25000
+           self.memory = self.memory[1000:] # 2000
+        self.memory.append((state,action,reward,next_state,done, masks_next))
+
+    def act(self, card_state, enemy_state, pot_state, current_state, masks,e):
+        card_state = np.reshape( card_state, (1, len(card_state)))
+        enemy_state = np.reshape( enemy_state, (1, len(enemy_state)))
+        pot_state = np.reshape( pot_state, (1, len(pot_state)))
+
+        current_state = np.reshape( current_state, (1, len(current_state)))
+
+        self.combat_size += 1
+
+        act_values = self.target_model.__call__([card_state, enemy_state, pot_state, current_state])
+        if np.random.rand() <= self.epsilon:
+            temp = []
+            for i in range(len(masks)):
+                if(masks[i]):
+                    temp.append(i)
+            return temp[random.randrange(len(temp))]
+        else:
+            softmaxdist = np.array()
+            index = np.array()
+            for i in range(len(masks)):
+                if masks[i]:
+                    softmaxdist.append(act_values[0][i])
+                    index.append(i)
+            sample = sample_from_softmax(softmax(softmaxdist)) #gets softmax probability distribution and selects a sample
+            # return the action index from the softmax sample
+            return index[sample]
+
+    def replay(self, batch_size):
+        minibatch = self.memory[-batch_size:]
+
+        card_state_sample =   np.array([minibatch[i][0][0] for i in range(batch_size)])
+        enemy_state_sample =  np.array([minibatch[i][0][1] for i in range(batch_size)])
+        pot_state_sample =    np.array([minibatch[i][0][2] for i in range(batch_size)])
+        main_state_sample =   np.array([minibatch[i][0][3] for i in range(batch_size)])
+
+        card_state_next_sample =   np.array([minibatch[i][3][0] for i in range(batch_size)])
+        enemy_state_next_sample =  np.array([minibatch[i][3][1] for i in range(batch_size)])
+        pot_state_next_sample =    np.array([minibatch[i][3][2] for i in range(batch_size)])
+        main_state_next_sample =   np.array([minibatch[i][3][3] for i in range(batch_size)])
+
+        rewards_sample =    [minibatch[i][2] for i in range(batch_size)]
+        action_sample =     [minibatch[i][1] for i in range(batch_size)]
+        done_sample =       tf.convert_to_tensor([float(minibatch[i][4]) for i in range(batch_size)])
+        masks_next_sample = [minibatch[i][5] for i in range(batch_size)]  
+        
+        #future_rewards = self.target_model.predict([card_state_next_sample,enemy_state_next_sample,pot_state_next_sample,main_state_next_sample])
+        # CW adjusting loss calculation to only reflect expected lost health
+
+        masks = tf.one_hot(action_sample, action_size)
+        with tf.GradientTape() as tape:
+            q_values = agent.target_model.__call__([card_state_sample,enemy_state_sample,pot_state_sample,main_state_sample])
+            advantage = q_values - np.mean(q_values)
+            old_values = self.target_model.__call__([card_state_sample,enemy_state_sample,pot_state_sample,main_state_sample])
+            new_values = self.model([card_state_sample,enemy_state_sample,pot_state_sample,main_state_sample])
+            ratio = (new_values/old_values)
+            loss = keras.minimum(ratio * advantage, keras.clip(ratio, min_value=1 - LOSS_CLIPPING, max_value=1 + LOSS_CLIPPING) * advantage)
+
+        grads = tape.gradient(loss, self.model.trainable_variables)
+        self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
+
+        if self.epsilon > self.epsilon_min:
+            self.epsilon *= self.epsilon_decay
+        #if self.epsilon < 0.009:
+         #   self.epsilon = 0.1
+    def load(self, name):
+        #self.model.load_weights(name)
+        #self.target_model.load_weights(name)
+
+    def save(self, name):
+        pass
+        #self.model.save_weights(name)
+    
+    def combat_size_reset(self): # CW combat size reset
+        self.combat_size = 0
 
 
 agent = DQNAgent(state_size, action_size)
+actor = ActorAgent(state_size, action_size)
+
+# 1. Softmax Function
+def softmax(x): # need numpy array
+    # Subtract max for numerical stability (avoiding overflow in exp)
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum(axis=0)
+
+# 2. Select an element from the softmax distribution
+def sample_from_softmax(softmax_dist): #need numpy array
+    return np.random.choice(len(softmax_dist), p=softmax_dist)
 
 def takeStateGiveAction(current_state, masks, card_state, enemy_state, pot_state, firstPass,e):
     #if firstPass:
     #    agent.load(".\model\stsL.hdf5")
-    return agent.act(card_state, enemy_state, pot_state, current_state,masks,e) 
-
+    return actor.act(card_state, enemy_state, pot_state, current_state,masks,e) 
 
 def takeNextStateUpdateNetwork(old_state,card_state, enemy_state, pot_state, action, reward, next_state, next_state_card, next_state_enemy, next_state_pot, done, masks_next, e):
     agent.remember([card_state, enemy_state, pot_state, old_state], action, reward, [next_state_card, next_state_enemy, next_state_pot, next_state], done, masks_next)
     if(done == True):
         print("update episode: {}, {}".format(e, agent.combat_size))
         agent.last_e_trained = e
+        actor.last_e_trained = e
 
+        actor.replay(actor.combat_size)
         agent.replay(agent.combat_size)
         agent.combat_size_reset() # CW reset combat length counter
+        actor.combat_size_reset()
+        actor.target_model.set_weights(actor.model.get_weights())
         agent.target_model.set_weights(agent.model.get_weights()) # CW update target network every time
 
     if e % 100 == 0:
         agent.save(output_dir + "MICRO" + '{:04d}'.format(e) + ".hdf5")
+
+    if (e == 5 or e == 1000) and done == True:
+        #print("Calling LossWriter")
+        #agent.lossWriter()
+
 
 def getEpsilon():
     return round(agent.epsilon,4)
